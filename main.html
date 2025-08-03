@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>感情入力</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1rem;
+      color: #555;
+      margin-bottom: 1.5rem;
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 150px);
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    button {
+      padding: 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      opacity: 0.8;
+    }
+    .anger    { background-color: #e74c3c; }
+    .sadness  { background-color: #3498db; }
+    .tired    { background-color: #7f8c8d; }
+    .joy      { background-color: #f39c12; }
+    .strength-btn {
+      background-color: #bdc3c7;
+      color: black;
+    }
+    .selected {
+      outline: 3px solid #2ecc71;
+      opacity: 1 !important;
+    }
+    #submitBtn {
+      margin-top: 1rem;
+      background-color: #5b45ec;
+      width: 300px;
+    }
+    #result, a {
+      margin-top: 1rem;
+      display: block;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    #logoutBtn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: #888;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.8rem;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>今の気持ちは？</h1>
+  <h2 id="welcome">さん、こんにちは！</h2>
+
+  <div class="button-grid">
+    <button class="anger"    onclick="selectEmotion(this, '怒り')">怒り</button>
+    <button class="sadness"  onclick="selectEmotion(this, '悲しみ')">悲しみ</button>
+    <button class="tired"    onclick="selectEmotion(this, '疲れた')">疲れた</button>
+    <button class="joy"      onclick="selectEmotion(this, '喜び')">喜び</button>
+  </div>
+
+  <p>感情の強さ</p>
+  <div class="button-grid">
+    <button class="strength-btn" onclick="selectStrength(this, '弱')">弱</button>
+    <button class="strength-btn" onclick="selectStrength(this, '強')">強</button>
+  </div>
+
+  <button id="submitBtn" onclick="send()">送信</button>
+
+  <p id="result"></p>
+  <a href="#" onclick="window.location.href='history.html'">感情履歴を参照する</a>
+
+  <button id="logoutBtn" onclick="logout()">ログアウト</button>
+
+  <script>
+    const emotionApiUrl = "https://m9n5uqrgil.execute-api.ap-northeast-1.amazonaws.com/dev/emotion";
+
+    let selectedEmotion = "";
+    let selectedStrength = "";
+    let lastEmotionBtn = null;
+    let lastStrengthBtn = null;
+
+    // ユーザー名表示
+    window.addEventListener("DOMContentLoaded", () => {
+      const user = localStorage.getItem("user");
+      if (!user) {
+        alert("ログインしてください");
+        window.location.href = "index.html";
+        return;
+      }
+      document.getElementById("welcome").textContent = `${user}さん、こんにちは！`;
+    });
+
+    function selectEmotion(btn, emotion) {
+      if (lastEmotionBtn) lastEmotionBtn.classList.remove("selected");
+      selectedEmotion = emotion;
+      btn.classList.add("selected");
+      lastEmotionBtn = btn;
+    }
+
+    function selectStrength(btn, strength) {
+      if (lastStrengthBtn) lastStrengthBtn.classList.remove("selected");
+      selectedStrength = strength;
+      btn.classList.add("selected");
+      lastStrengthBtn = btn;
+    }
+
+    function send() {
+      const user = localStorage.getItem("user");
+      if (!user || !selectedEmotion || !selectedStrength) {
+        document.getElementById("result").textContent = "すべて選択してください";
+        return;
+      }
+
+      fetch(emotionApiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user: user,
+          emotion: selectedEmotion + "（" + selectedStrength + "）"
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("result").textContent = data.message;
+      })
+      .catch(err => {
+        document.getElementById("result").textContent = "送信エラー：" + err;
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
