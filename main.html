@@ -9,18 +9,16 @@
       font-family: sans-serif;
       text-align: center;
       padding: 2rem;
-      position: relative;
-      min-height: 100vh;
-      box-sizing: border-box;
+      background: #f7f8fa;
     }
     h1 {
       font-size: 1.5rem;
       margin-bottom: 0.5rem;
     }
-    h2 {
-      font-size: 1rem;
-      color: #555;
+    #welcome {
       margin-bottom: 1.5rem;
+      font-weight: bold;
+      color: #333;
     }
     .button-grid {
       display: grid;
@@ -36,30 +34,32 @@
       border-radius: 8px;
       color: white;
       cursor: pointer;
-      opacity: 0.8;
+      opacity: 0.85;
     }
-    .anger    { background-color: #e74c3c; }
-    .sadness  { background-color: #3498db; }
-    .tired    { background-color: #7f8c8d; }
-    .joy      { background-color: #f39c12; }
-    .strength-btn {
-      background-color: #bdc3c7;
-      color: black;
-    }
+
+    /* 感情カラー */
+    .Joy       { background-color: #f39c12; }
+    .Anger     { background-color: #e74c3c; }
+    .Sadness   { background-color: #3498db; }
+    .Fear      { background-color: #9b59b6; }
+    .Surprise  { background-color: #1abc9c; }
+    .Tired     { background-color: #7f8c8d; }
+    .Calm      { background-color: #2ecc71; }
+
     .selected {
-      outline: 3px solid #2ecc71;
+      outline: 3px solid #5b45ec;
       opacity: 1 !important;
     }
     #submitBtn {
       margin-top: 1rem;
       background-color: #5b45ec;
-      width: 300px;
+      width: 320px;
     }
     #result, a {
       margin-top: 1rem;
       display: block;
       font-size: 0.9rem;
-      color: #555;
+      color: #333;
     }
     #logoutBtn {
       position: fixed;
@@ -77,89 +77,24 @@
 </head>
 <body>
   <h1>今の気持ちは？</h1>
-  <h2 id="welcome">さん、こんにちは！</h2>
+  <p id="welcome"></p>
 
   <div class="button-grid">
-    <button class="anger"    onclick="selectEmotion(this, '怒り')">怒り</button>
-    <button class="sadness"  onclick="selectEmotion(this, '悲しみ')">悲しみ</button>
-    <button class="tired"    onclick="selectEmotion(this, '疲れた')">疲れた</button>
-    <button class="joy"      onclick="selectEmotion(this, '喜び')">喜び</button>
-  </div>
-
-  <p>感情の強さ</p>
-  <div class="button-grid">
-    <button class="strength-btn" onclick="selectStrength(this, '弱')">弱</button>
-    <button class="strength-btn" onclick="selectStrength(this, '強')">強</button>
+    <button class="Joy"      onclick="selectEmotion(this, '喜び')">喜び</button>
+    <button class="Anger"    onclick="selectEmotion(this, '怒り')">怒り</button>
+    <button class="Sadness"  onclick="selectEmotion(this, '悲しみ')">悲しみ</button>
+    <button class="Fear"     onclick="selectEmotion(this, '恐れ')">恐れ</button>
+    <button class="Surprise" onclick="selectEmotion(this, '驚き')">驚き</button>
+    <button class="Tired"    onclick="selectEmotion(this, '疲労')">疲労</button>
+    <button class="Calm"     onclick="selectEmotion(this, 'リラックス')">リラックス</button>
   </div>
 
   <button id="submitBtn" onclick="send()">送信</button>
-
   <p id="result"></p>
-  <a href="#" onclick="window.location.href='history.html'">感情履歴を参照する</a>
+  <a href="history.html">感情履歴を参照する</a>
 
   <button id="logoutBtn" onclick="logout()">ログアウト</button>
 
-  <script>
-    const emotionApiUrl = "https://m9n5uqrgil.execute-api.ap-northeast-1.amazonaws.com/dev/emotion";
-
-    let selectedEmotion = "";
-    let selectedStrength = "";
-    let lastEmotionBtn = null;
-    let lastStrengthBtn = null;
-
-    // ユーザー名表示
-    window.addEventListener("DOMContentLoaded", () => {
-      const user = localStorage.getItem("user");
-      if (!user) {
-        alert("ログインしてください");
-        window.location.href = "index.html";
-        return;
-      }
-      document.getElementById("welcome").textContent = `${user}さん、こんにちは！`;
-    });
-
-    function selectEmotion(btn, emotion) {
-      if (lastEmotionBtn) lastEmotionBtn.classList.remove("selected");
-      selectedEmotion = emotion;
-      btn.classList.add("selected");
-      lastEmotionBtn = btn;
-    }
-
-    function selectStrength(btn, strength) {
-      if (lastStrengthBtn) lastStrengthBtn.classList.remove("selected");
-      selectedStrength = strength;
-      btn.classList.add("selected");
-      lastStrengthBtn = btn;
-    }
-
-    function send() {
-      const user = localStorage.getItem("user");
-      if (!user || !selectedEmotion || !selectedStrength) {
-        document.getElementById("result").textContent = "すべて選択してください";
-        return;
-      }
-
-      fetch(emotionApiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user: user,
-          emotion: selectedEmotion + "（" + selectedStrength + "）"
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("result").textContent = data.message;
-      })
-      .catch(err => {
-        document.getElementById("result").textContent = "送信エラー：" + err;
-      });
-    }
-
-    function logout() {
-      localStorage.removeItem("user");
-      window.location.href = "index.html";
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -5,10 +5,10 @@
   <title>感情履歴</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: sans-serif; display: flex; gap: 2rem; padding: 1rem; }
-    #historyList { list-style: disc; padding-left: 1rem; }
-    #chartContainer { width: 500px; }
-    button { background: #5b45ec; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; }
+    body { font-family: sans-serif; display: flex; gap: 2rem; padding: 1rem; flex-wrap: wrap; }
+    #historyList { list-style: disc; padding-left: 1rem; max-width: 500px; }
+    #chartContainer { width: 500px; min-width: 300px; }
+    button { background: #5b45ec; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; margin-top: 1rem; }
     select { margin-bottom: 1rem; }
   </style>
 </head>
@@ -29,75 +29,6 @@
     <canvas id="emotionChart"></canvas>
   </div>
 
-  <script>
-    const historyApiUrl = "https://lw4077g1f9.execute-api.ap-northeast-1.amazonaws.com/dev/history";
-    const user = localStorage.getItem("user");
-    const colorMap = {
-      "怒り": "#e74c3c",
-      "悲しみ": "#3498db",
-      "疲れた": "#7f8c8d",
-      "喜び": "#f39c12"
-    };
-
-    const weekdayLabels = ['日', '月', '火', '水', '木', '金', '土'];
-
-    document.getElementById("viewSelect").addEventListener("change", render);
-
-    let allData = [];
-    fetch(`${historyApiUrl}?user=${encodeURIComponent(user)}`)
-      .then(res => res.json())
-      .then(data => {
-        allData = data;
-        render();
-      });
-
-    function render() {
-      const view = document.getElementById("viewSelect").value;
-      const list = document.getElementById("historyList");
-      list.innerHTML = "";
-
-      const grouped = {};
-      allData.forEach(item => {
-        const date = new Date(item.timestamp);
-        const key = view === "date" ? date.toISOString().slice(0,10) : weekdayLabels[date.getDay()];
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push({ time: date.toTimeString().slice(0,8), emotion: item.emotion });
-      });
-
-      Object.keys(grouped).sort().forEach(key => {
-        const li = document.createElement("li");
-        li.innerHTML = `<strong>${key}</strong><ul>` +
-          grouped[key].map(d => `<li>${d.time} - ${d.emotion}</li>`).join('') +
-          '</ul>';
-        list.appendChild(li);
-      });
-
-      drawChart(grouped);
-    }
-
-    let chart;
-    function drawChart(grouped) {
-      const ctx = document.getElementById('emotionChart').getContext('2d');
-      const emotions = Object.keys(colorMap);
-      const labels = Object.keys(grouped).sort();
-      const datasets = emotions.map(emotion => {
-        return {
-          label: emotion,
-          backgroundColor: colorMap[emotion],
-          data: labels.map(label => grouped[label].filter(e => e.emotion.includes(emotion)).length)
-        }
-      });
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: labels, datasets: datasets },
-        options: {
-          responsive: true,
-          plugins: { title: { display: true, text: document.getElementById("viewSelect").value === 'date' ? '日別感情分布' : '曜日別感情分布' } },
-          scales: { y: { beginAtZero: true, title: { display: true, text: '件数' } }, x: { title: { display: true, text: document.getElementById("viewSelect").value === 'date' ? '日付' : '曜日' } } }
-        }
-      });
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
