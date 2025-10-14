@@ -5,93 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ログイン</title>
   <style>
-    body {
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background-color: #f8f9fa;
-      margin: 0;
-    }
-    h1 {
-      margin-bottom: 2rem;
-    }
-    input {
-      padding: 0.8rem;
-      margin: 0.5rem;
-      width: 250px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 1rem;
-    }
-    button {
-      margin-top: 1rem;
-      padding: 0.8rem;
-      width: 270px;
-      background-color: #5b45ec;
-      color: white;
-      font-size: 1rem;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      opacity: 0.9;
-    }
-    #message {
-      margin-top: 1rem;
-      color: #e74c3c;
-      font-size: 0.9rem;
-    }
+    body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f8f9fa;margin:0}
+    h1{margin-bottom:1.5rem}
+    input{padding:.8rem;margin:.4rem 0;width:260px;border:1px solid #ccc;border-radius:6px;font-size:1rem}
+    button{margin-top:.8rem;padding:.8rem;width:276px;background:#5b45ec;color:#fff;font-size:1rem;border:none;border-radius:6px;cursor:pointer}
+    a{margin-top:.8rem;color:#5b45ec;text-decoration:none}
+    #message{margin-top:.8rem;color:#e74c3c}
   </style>
 </head>
 <body>
-  <h1>ログインページ</h1>
-  <input type="text" id="username" placeholder="ユーザ名" />
-  <input type="password" id="password" placeholder="パスワード" />
+  <h1>ログイン</h1>
+  <input type="text" id="username" placeholder="ユーザ名">
+  <input type="password" id="password" placeholder="パスワード">
   <button onclick="login()">ログイン</button>
-  <button onclick="register()">新規登録</button>
+  <a href="register.html">新規登録はこちら</a>
   <p id="message"></p>
 
-  <script>
-    function login() {
-      const name = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-
-      if (!userData[name]) {
-        document.getElementById("message").textContent = "ユーザが存在しません。登録してください。";
-        return;
-      }
-      if (userData[name] !== pass) {
-        document.getElementById("message").textContent = "パスワードが間違っています。";
-        return;
-      }
-
-      localStorage.setItem("user", name);
-      window.location.href = "main.html";
-    }
-
-    function register() {
-      const name = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      if (!name || !pass) {
-        document.getElementById("message").textContent = "名前とパスワードを入力してください。";
-        return;
-      }
-
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-      if (userData[name]) {
-        document.getElementById("message").textContent = "その名前は既に使われています。";
-        return;
-      }
-
-      userData[name] = pass;
-      localStorage.setItem("userData", JSON.stringify(userData));
-      document.getElementById("message").textContent = "登録完了。ログインしてください。";
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

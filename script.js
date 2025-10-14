@@ -1,43 +1,54 @@
+// APIエンドポイント
 const emotionApiUrl = "https://m9n5uqrgil.execute-api.ap-northeast-1.amazonaws.com/dev/emotion";
 const historyApiUrl = "https://lw4077g1f9.execute-api.ap-northeast-1.amazonaws.com/dev/history";
 
+// グラフ用カラー（最新版）
 const colorMap = {
-  "喜び":     "#F7D65C", // Joy   : 黄・オレンジ
-  "怒り":     "#FF6B6B", // Anger : 赤
-  "悲しみ":   "#4DA3FF", // Sadness: 青
-  "恐れ":     "#7E6BFF", // Fear  : 黒・濃紫 → 濃紫寄り
-  "驚き":     "#F5A623", // Surprise: オレンジ/黄緑系 → オレンジ採用
-  "疲労":     "#BFC5CC", // Tired : グレー
-  "リラックス": "#7EDFB3"  // Calm  : 緑・青 → ミント
+  "喜び": "#F7D65C",
+  "怒り": "#FF6B6B",
+  "悲しみ": "#4DA3FF",
+  "恐れ": "#7E6BFF",
+  "驚き": "#F5A623",
+  "疲労": "#BFC5CC",
+  "リラックス": "#7EDFB3"
 };
+const weekdayLabels = ['日','月','火','水','木','金','土'];
 
+// --------------- ログイン ---------------
+function login() {
+  const name = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
 
-const weekdayLabels = ['日', '月', '火', '水', '木', '金', '土'];
+  const message = document.getElementById("message");
+  if (!userData[name]) { message.textContent = "ユーザが存在しません。新規登録してください。"; return; }
+  if (userData[name] !== pass) { message.textContent = "パスワードが間違っています。"; return; }
 
-// ---------- ページロード時 ----------
+  localStorage.setItem("user", name);
+  window.location.href = "main.html";
+}
+
+// ログインページ用：フラッシュメッセージ表示
 window.addEventListener("DOMContentLoaded", () => {
-  const user = localStorage.getItem("user");
-
-  // ログイン確認
-  if (!user) {
-    alert("ログインしてください");
-    window.location.href = "index.html";
-    return;
+  const message = document.getElementById("message");
+  const flash = localStorage.getItem("flash");
+  if (message && flash) {
+    message.style.color = "#2ecc71";
+    message.textContent = flash;
+    localStorage.removeItem("flash");
   }
 
-  // main.html にユーザー名表示
+  // main/history の初期化
+  const user = localStorage.getItem("user");
   const welcome = document.getElementById("welcome");
-  if (welcome) welcome.textContent = `${user}さん、こんにちは！`;
+  if (welcome && user) welcome.textContent = `${user}さん、こんにちは！`;
 
-  // historyページなら履歴表示
   const view = document.getElementById("viewSelect");
   const chartCanvas = document.getElementById("emotionChart");
-  if (view && chartCanvas) {
-    setupHistoryPage(user);
-  }
+  if (view && chartCanvas) setupHistoryPage(user);
 });
 
-// ---------- 感情送信 ----------
+// --------------- メイン（送信） ---------------
 let selectedEmotion = "";
 let lastEmotionBtn = null;
 
@@ -50,23 +61,17 @@ function selectEmotion(btn, emotion) {
 
 function send() {
   const user = localStorage.getItem("user");
-  if (!user || !selectedEmotion) {
-    document.getElementById("result").textContent = "感情を選んでください";
-    return;
-  }
+  if (!user) { alert("ログインしてください"); location.href = "index.html"; return; }
+  if (!selectedEmotion) { document.getElementById("result").textContent = "感情を選んでください"; return; }
 
   fetch(emotionApiUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user: user, emotion: selectedEmotion })
+    body: JSON.stringify({ user, emotion: selectedEmotion })
   })
   .then(res => res.json())
-  .then(data => {
-    document.getElementById("result").textContent = data.message || "送信完了";
-  })
-  .catch(err => {
-    document.getElementById("result").textContent = "送信エラー：" + err;
-  });
+  .then(data => { document.getElementById("result").textContent = data.message || "送信完了"; })
+  .catch(err => { document.getElementById("result").textContent = "送信エラー：" + err; });
 }
 
 function logout() {
@@ -74,39 +79,29 @@ function logout() {
   window.location.href = "index.html";
 }
 
-// ---------- 履歴・グラフ ----------
+// --------------- 履歴 ---------------
 function setupHistoryPage(user) {
-  let allData = [];
-
+  if (!user) return;
   fetch(`${historyApiUrl}?user=${encodeURIComponent(user)}`)
     .then(res => res.json())
-    .then(data => {
-      allData = data;
-      renderHistory(allData);
-      document.getElementById("viewSelect")
-        .addEventListener("change", () => renderHistory(allData));
-    });
+    .then(data => { renderHistory(data || []); document.getElementById("viewSelect").addEventListener("change", () => renderHistory(data || [])); })
+    .catch(() => { const ul = document.getElementById("historyList"); if (ul) ul.innerHTML = "<li>履歴の取得に失敗しました</li>"; });
 
-  function renderHistory(data) {
+  function renderHistory(allData) {
     const mode = document.getElementById("viewSelect").value;
     const list = document.getElementById("historyList");
     list.innerHTML = "";
 
     const grouped = {};
-    data.forEach(item => {
-      const date = new Date(item.timestamp);
-      const key = mode === "date"
-        ? date.toISOString().slice(0,10)
-        : weekdayLabels[date.getDay()];
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push({ time: date.toTimeString().slice(0,8), emotion: item.emotion });
+    allData.forEach(item => {
+      const d = new Date(item.timestamp);
+      const key = mode === "date" ? d.toISOString().slice(0,10) : weekdayLabels[d.getDay()];
+      (grouped[key] ||= []).push({ time: d.toTimeString().slice(0,5), emotion: item.emotion });
     });
 
-    Object.keys(grouped).sort().forEach(key => {
+    Object.keys(grouped).sort().forEach(k => {
       const li = document.createElement("li");
-      li.innerHTML = `<strong>${key}</strong><ul>` +
-        grouped[key].map(d => `<li>${d.time} - ${d.emotion}</li>`).join('') +
-        '</ul>';
+      li.innerHTML = `<strong>${k}</strong><ul>` + grouped[k].map(v => `<li>${v.time} - ${v.emotion}</li>`).join("") + "</ul>";
       list.appendChild(li);
     });
 
@@ -115,32 +110,23 @@ function setupHistoryPage(user) {
 
   let chart;
   function drawChart(grouped, mode) {
-    const ctx = document.getElementById('emotionChart').getContext('2d');
+    const ctx = document.getElementById("emotionChart").getContext("2d");
     const emotions = Object.keys(colorMap);
     const labels = Object.keys(grouped).sort();
     const datasets = emotions.map(emotion => ({
       label: emotion,
       backgroundColor: colorMap[emotion],
-      data: labels.map(label =>
-        grouped[label].filter(e => e.emotion.includes(emotion)).length)
+      data: labels.map(label => grouped[label].filter(e => e.emotion.includes(emotion)).length)
     }));
 
     if (chart) chart.destroy();
     chart = new Chart(ctx, {
-      type: 'bar',
-      data: { labels: labels, datasets: datasets },
+      type: "bar",
+      data: { labels, datasets },
       options: {
         responsive: true,
-        plugins: {
-          title: {
-            display: true,
-            text: mode === 'date' ? '日別感情分布' : '曜日別感情分布'
-          }
-        },
-        scales: {
-          y: { beginAtZero: true, title: { display: true, text: '件数' } },
-          x: { title: { display: true, text: mode === 'date' ? '日付' : '曜日' } }
-        }
+        plugins: { title: { display: true, text: mode === "date" ? "日別感情分布" : "曜日別感情分布" } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: "件数" } }, x: { title: { display: true, text: mode === "date" ? "日付" : "曜日" } } }
       }
     });
   }
