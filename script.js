@@ -2,7 +2,7 @@
 const emotionApiUrl = "https://m9n5uqrgil.execute-api.ap-northeast-1.amazonaws.com/dev/emotion";
 const historyApiUrl = "https://lw4077g1f9.execute-api.ap-northeast-1.amazonaws.com/dev/history";
 
-// グラフ用カラー（最新版）
+// グラフ用カラー
 const colorMap = {
   "喜び": "#F7D65C",
   "怒り": "#FF6B6B",
@@ -14,7 +14,44 @@ const colorMap = {
 };
 const weekdayLabels = ['日','月','火','水','木','金','土'];
 
-// --------------- ログイン ---------------
+// ---------------- ページ共通初期化 ----------------
+window.addEventListener("DOMContentLoaded", () => {
+  const user = localStorage.getItem("user");
+
+  // 現在のページ名（index.html のときは "index.html" に補正）
+  const path = location.pathname;
+  const page = path.substring(path.lastIndexOf("/") + 1) || "index.html";
+
+  // 未ログインをブロックするページだけ制御
+  const protectedPages = ["main.html", "history.html"];
+  if (protectedPages.includes(page) && !user) {
+    alert("ログインしてください");
+    window.location.href = "index.html";
+    return;
+  }
+
+  // ログインページでフラッシュ表示
+  const message = document.getElementById("message");
+  const flash = localStorage.getItem("flash");
+  if (page === "index.html" && message && flash) {
+    message.style.color = "#2ecc71";
+    message.textContent = flash;
+    localStorage.removeItem("flash");
+  }
+
+  // main.html の挨拶
+  const welcome = document.getElementById("welcome");
+  if (page === "main.html" && welcome && user) {
+    welcome.textContent = `${user}さん、こんにちは！`;
+  }
+
+  // history.html 初期化
+  if (page === "history.html") {
+    setupHistoryPage(user);
+  }
+});
+
+// ---------------- ログイン ----------------
 function login() {
   const name = document.getElementById("username").value.trim();
   const pass = document.getElementById("password").value.trim();
@@ -28,27 +65,7 @@ function login() {
   window.location.href = "main.html";
 }
 
-// ログインページ用：フラッシュメッセージ表示
-window.addEventListener("DOMContentLoaded", () => {
-  const message = document.getElementById("message");
-  const flash = localStorage.getItem("flash");
-  if (message && flash) {
-    message.style.color = "#2ecc71";
-    message.textContent = flash;
-    localStorage.removeItem("flash");
-  }
-
-  // main/history の初期化
-  const user = localStorage.getItem("user");
-  const welcome = document.getElementById("welcome");
-  if (welcome && user) welcome.textContent = `${user}さん、こんにちは！`;
-
-  const view = document.getElementById("viewSelect");
-  const chartCanvas = document.getElementById("emotionChart");
-  if (view && chartCanvas) setupHistoryPage(user);
-});
-
-// --------------- メイン（送信） ---------------
+// ---------------- メイン（送信） ----------------
 let selectedEmotion = "";
 let lastEmotionBtn = null;
 
@@ -79,13 +96,20 @@ function logout() {
   window.location.href = "index.html";
 }
 
-// --------------- 履歴 ---------------
+// ---------------- 履歴 ----------------
 function setupHistoryPage(user) {
   if (!user) return;
   fetch(`${historyApiUrl}?user=${encodeURIComponent(user)}`)
     .then(res => res.json())
-    .then(data => { renderHistory(data || []); document.getElementById("viewSelect").addEventListener("change", () => renderHistory(data || [])); })
-    .catch(() => { const ul = document.getElementById("historyList"); if (ul) ul.innerHTML = "<li>履歴の取得に失敗しました</li>"; });
+    .then(data => {
+      renderHistory(data || []);
+      document.getElementById("viewSelect")
+        .addEventListener("change", () => renderHistory(data || []));
+    })
+    .catch(() => {
+      const ul = document.getElementById("historyList");
+      if (ul) ul.innerHTML = "<li>履歴の取得に失敗しました</li>";
+    });
 
   function renderHistory(allData) {
     const mode = document.getElementById("viewSelect").value;
@@ -96,12 +120,14 @@ function setupHistoryPage(user) {
     allData.forEach(item => {
       const d = new Date(item.timestamp);
       const key = mode === "date" ? d.toISOString().slice(0,10) : weekdayLabels[d.getDay()];
-      (grouped[key] ||= []).push({ time: d.toTimeString().slice(0,5), emotion: item.emotion });
+      (grouped[key] ||= []).push({ time: d.toTimeString().slice(0,8), emotion: item.emotion });
     });
 
     Object.keys(grouped).sort().forEach(k => {
       const li = document.createElement("li");
-      li.innerHTML = `<strong>${k}</strong><ul>` + grouped[k].map(v => `<li>${v.time} - ${v.emotion}</li>`).join("") + "</ul>";
+      li.innerHTML = `<strong>${k}</strong><ul>` +
+        grouped[k].map(v => `<li>${v.time} - ${v.emotion}</li>`).join("") +
+        `</ul>`;
       list.appendChild(li);
     });
 
