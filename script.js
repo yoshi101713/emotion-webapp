@@ -2,14 +2,15 @@ const emotionApiUrl = "https://m9n5uqrgil.execute-api.ap-northeast-1.amazonaws.c
 const historyApiUrl = "https://lw4077g1f9.execute-api.ap-northeast-1.amazonaws.com/dev/history";
 
 const colorMap = {
-  "喜び": "#f39c12",
-  "怒り": "#e74c3c",
-  "悲しみ": "#3498db",
-  "恐れ": "#9b59b6",
-  "驚き": "#1abc9c",
-  "疲労": "#7f8c8d",
-  "リラックス": "#2ecc71"
+  "喜び":     "#F7D65C", // Joy   : 黄・オレンジ
+  "怒り":     "#FF6B6B", // Anger : 赤
+  "悲しみ":   "#4DA3FF", // Sadness: 青
+  "恐れ":     "#7E6BFF", // Fear  : 黒・濃紫 → 濃紫寄り
+  "驚き":     "#F5A623", // Surprise: オレンジ/黄緑系 → オレンジ採用
+  "疲労":     "#BFC5CC", // Tired : グレー
+  "リラックス": "#7EDFB3"  // Calm  : 緑・青 → ミント
 };
+
 
 const weekdayLabels = ['日', '月', '火', '水', '木', '金', '土'];
 
