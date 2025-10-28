@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ログイン</title>
+  <style>
+    body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f8f9fa;margin:0}
+    h1{margin-bottom:1.5rem}
+    input{padding:.8rem;margin:.4rem 0;width:260px;border:1px solid #ccc;border-radius:6px;font-size:1rem}
+    button{margin-top:.8rem;padding:.8rem;width:276px;background:#5b45ec;color:#fff;font-size:1rem;border:none;border-radius:6px;cursor:pointer}
+    a{margin-top:.8rem;color:#5b45ec;text-decoration:none}
+    #message{margin-top:.8rem;color:#e74c3c}
+  </style>
+</head>
+<body>
+  <h1>ログイン</h1>
+  <input type="text" id="username" placeholder="ユーザ名">
+  <input type="password" id="password" placeholder="パスワード">
+  <button onclick="login()">ログイン</button>
+  <a href="register.html">新規登録はこちら</a>
+  <p id="message"></p>
+
+  <script src="script.js"></script>
+</body>
+</html>
